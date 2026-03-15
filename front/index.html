@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小刻的旅游计划</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- AMap Loader (Global) -->
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: "0dbbc0d4fd57d96e58445df5f035bd8b",
+        };
+    </script>
+    <script src="https://webapi.amap.com/loader.js"></script>
+
+    <style>
+        /* Custom Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #ffffff;
+            color: #333;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* --- Chat Interface Styles (Preserved from User Request) --- */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background-color: #fff;
+        }
+
+        .message-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .avatar-container {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #e7a500;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            line-height: 1.5;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+            word-break: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ai-message {
+            background-color: #f0f0f0;
+            border-bottom-left-radius: 5px;
+            color: #333;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            max-width: 75% ;
+            background-color: #e7a500;
+            color: white;
+            border-bottom-right-radius: 5px;
+            text-align: right;
+        }
+
+        .input-container {
+            display: flex;
+            padding: 15px;
+            background-color: #fff;
+            border-top: 1px solid #eee;
+            width: 100%;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-field:focus {
+            border-color: #e7a500;
+        }
+
+        /* --- Custom Button Styles (Preserved) --- */
+        .button-custom {
+          all: unset;
+          cursor: pointer;
+          -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+          position: relative;
+          border-radius: 100em;
+          background-color: rgba(0, 0, 0, 0.75);
+          box-shadow:
+            -0.15em -0.15em 0.15em -0.075em rgba(5, 5, 5, 0.25),
+            0.0375em 0.0375em 0.0675em 0 rgba(5, 5, 5, 0.1);
+          margin-left: 10px;
+          width: 60px;
+          height: 46px;
+        }
+
+        .button-custom::after {
+          content: "";
+          position: absolute;
+          z-index: 0;
+          width: calc(100% + 0.3em);
+          height: calc(100% + 0.3em);
+          top: -0.15em;
+          left: -0.15em;
+          border-radius: inherit;
+          background: linear-gradient(
+            -135deg,
+            rgba(5, 5, 5, 0.5),
+            transparent 20%,
+            transparent 100%
+          );
+          filter: blur(0.0125em);
+          opacity: 0.25;
+          mix-blend-mode: multiply;
+        }
+
+        .button-custom .button-outer {
+          position: relative;
+          z-index: 1;
+          border-radius: inherit;
+          transition: box-shadow 300ms ease;
+          will-change: box-shadow;
+          box-shadow:
+            0 0.05em 0.05em -0.01em rgba(5, 5, 5, 1),
+            0 0.01em 0.01em -0.01em rgba(5, 5, 5, 0.5),
+            0.15em 0.3em 0.1em -0.01em rgba(5, 5, 5, 0.25);
+        }
+
+        .button-custom:hover .button-outer {
+          box-shadow:
+            0 0 0 0 rgba(5, 5, 5, 1),
+            0 0 0 0 rgba(5, 5, 5, 0.5),
+            0 0 0 0 rgba(5, 5, 5, 0.25);
+        }
+
+        .button-custom .button-inner {
+          --inset: 0.035em;
+          position: relative;
+          z-index: 1;
+          border-radius: inherit;
+          padding: 1em 1.5em;
+          background-image: linear-gradient(
+            135deg,
+            rgba(230, 230, 230, 1),
+            rgba(180, 180, 180, 1)
+          );
+          transition:
+            box-shadow 300ms ease,
+            clip-path 250ms ease,
+            background-image 250ms ease,
+            transform 250ms ease;
+          will-change: box-shadow, clip-path, background-image, transform;
+          overflow: clip;
+          clip-path: inset(0 0 0 0 round 100em);
+          box-shadow:
+                /* 1 */
+            0 0 0 0 inset rgba(5, 5, 5, 0.1),
+            /* 2 */ -0.05em -0.05em 0.05em 0 inset rgba(5, 5, 5, 0.25),
+            /* 3 */ 0 0 0 0 inset rgba(5, 5, 5, 0.1),
+            /* 4 */ 0 0 0.05em 0.2em inset rgba(255, 255, 255, 0.25),
+            /* 5 */ 0.025em 0.05em 0.1em 0 inset rgba(255, 255, 255, 1),
+            /* 6 */ 0.12em 0.12em 0.12em inset rgba(255, 255, 255, 0.25),
+            /* 7 */ -0.075em -0.25em 0.25em 0.1em inset rgba(5, 5, 5, 0.25);
+        }
+
+        .button-custom:hover .button-inner {
+          clip-path: inset(
+            clamp(1px, 0.0625em, 2px) clamp(1px, 0.0625em, 2px)
+              clamp(1px, 0.0625em, 2px) clamp(1px, 0.0625em, 2px) round 100em
+          );
+          box-shadow:
+                /* 1 */
+            0.1em 0.15em 0.05em 0 inset rgba(5, 5, 5, 0.75),
+            /* 2 */ -0.025em -0.03em 0.05em 0.025em inset rgba(5, 5, 5, 0.5),
+            /* 3 */ 0.25em 0.25em 0.2em 0 inset rgba(5, 5, 5, 0.5),
+            /* 4 */ 0 0 0.05em 0.5em inset rgba(255, 255, 255, 0.15),
+            /* 5 */ 0 0 0 0 inset rgba(255, 255, 255, 1),
+            /* 6 */ 0.12em 0.12em 0.12em inset rgba(255, 255, 255, 0.25),
+            /* 7 */ -0.075em -0.12em 0.2em 0.1em inset rgba(5, 5, 5, 0.25);
+        }
+
+        .button-custom .button-inner span {
+          position: relative;
+          z-index: 4;
+          font-family: "Inter", sans-serif;
+          letter-spacing: -0.05em;
+          font-weight: 500;
+          color: rgba(0, 0, 0, 0);
+          background-image: linear-gradient(
+            135deg,
+            rgba(25, 25, 25, 1),
+            rgba(75, 75, 75, 1)
+          );
+          -webkit-background-clip: text;
+          background-clip: text;
+          transition: transform 250ms ease;
+          display: block;
+          will-change: transform;
+          text-shadow: rgba(0, 0, 0, 0.1) 0 0 0.1em;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+        }
+
+        .button-custom:hover .button-inner span {
+          transform: scale(0.975);
+        }
+
+        .button-custom:active .button-inner {
+          transform: scale(0.975);
+        }
+        
+        .button-custom .button-inner {
+          padding: 0.8em 1.2em !important;
+        }
+
+        /* --- Switch Styles (Modified for Size & Position) --- */
+        /* Scaled down by 20% (100px -> 80px) */
+        .checkbox-wrapper-41 {
+            --size: 80px; 
+            position: absolute;
+            top: 12px; /* Adjusted for visual balance */
+            right: 20px;
+            z-index: 100;
+        }
+
+        .checkbox-wrapper-41 input[type="checkbox"] {
+            -webkit-appearance: none;
+            width: var(--size);
+            height: calc(var(--size) / 2);
+            background-color: #fff;
+            border: 3px solid #222;
+            border-radius: 30px 100px 100px 100px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            outline: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.5s;
+        }
+
+        .checkbox-wrapper-41 input[type="checkbox"]::before {
+            content: "";
+            position: absolute;
+            width: calc(var(--size) / 2);
+            height: calc(var(--size) / 2);
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%) scale(0.7);
+            border: 3px solid #222;
+            border-radius: 30px 100px 100px 100px;
+            background-color: #fde881;
+            box-sizing: border-box;
+            transition: all 0.5s;
+        }
+
+        .checkbox-wrapper-41 input[type="checkbox"]:checked {
+            background-color: #fde881;
+            border-radius: 100px 100px 30px 100px;
+        }
+
+        .checkbox-wrapper-41 input[type="checkbox"]:checked::before {
+            left: 50%;
+            background-color: #fff;
+            border-radius: 100px 100px 30px 100px;
+        }
+
+        /* --- Map Interface Styles (Preserved from User Request) --- */
+        #map-view {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        #container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .custom-content-marker {
+            position: relative;
+            width: 32px;
+            height: 40px;
+            cursor: pointer;
+        }
+        
+        .custom-content-marker img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .search-container-map {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .search-input-map {
+            border: none;
+            outline: none;
+            font-size: 14px;
+            padding: 4px 8px;
+            width: 200px;
+            background: transparent;
+        }
+
+        .search-btn-map {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .log-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px;
+            box-shadow: 0 -8px 20px rgba(0,0,0,0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 100px);
+            height: 40vh;
+        }
+
+        .log-panel.show {
+            transform: translateY(0);
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .panel-header h2 {
+            color: #FF9800;
+            font-size: 2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .updated {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .logs-list {
+            margin-bottom: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkbox-wrapper .terms-label {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-wrapper .checkbox-svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .checkbox-wrapper .checkbox-box {
+            fill: rgba(207, 205, 205, 0.425);
+            stroke: #e7a500;
+            stroke-dasharray: 800;
+            stroke-dashoffset: 800;
+            transition: stroke-dashoffset 0.6s ease-in;
+        }
+
+        .checkbox-wrapper .checkbox-tick {
+            stroke: #e7a500;
+            stroke-dasharray: 172;
+            stroke-dashoffset: 172;
+            transition: stroke-dashoffset 0.6s ease-in;
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-box,
+        .checkbox-wrapper input[type="checkbox"]:checked + .terms-label .checkbox-tick {
+            stroke-dashoffset: 0;
+        }
+
+        .log-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .amap_lib_placeSearch_poi {
+  display: none !important;
+}
+
+        .log-title-input,
+        .log-desc-input {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 8px 0;
+            font-size: 1rem;
+            resize: none;
+            background: transparent;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .log-title-input:focus,
+        .log-desc-input:focus {
+            border-bottom-color: #e7a500;
+        }
+
+        .log-title-input {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #1a1a1a;
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .new-log-btn {
+            background: #FF9800;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            transition: background 0.3s ease;
+        }
+
+        .delete-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: rgb(20, 20, 20);
+            border: none;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.164);
+            cursor: pointer;
+            transition-duration: 0.3s;
+            overflow: hidden;
+            position: relative;
+            gap: 1px;
+        }
+
+        .delete-button .svgIcon {
+            width: 12px;
+            transition-duration: 0.3s;
+        }
+
+        .delete-button .svgIcon path {
+            fill: white;
+        }
+
+        .delete-button:hover {
+            width: 140px;
+            border-radius: 50px;
+            transition-duration: 0.3s;
+            background-color: rgb(255, 69, 69);
+            align-items: center;
+            gap: 0;
+        }
+
+        .delete-button:hover .bin-bottom {
+            width: 50px;
+            transition-duration: 0.3s;
+            transform: translateY(60%);
+        }
+
+        .delete-button .bin-top {
+            transform-origin: bottom right;
+        }
+
+        .delete-button:hover .bin-top {
+            width: 50px;
+            transition-duration: 0.3s;
+            transform: translateY(60%) rotate(160deg);
+        }
+
+        .delete-button::before {
+            position: absolute;
+            top: -20px;
+            content: "Delete";
+            color: white;
+            transition-duration: 0.3s;
+            font-size: 2px;
+            opacity: 0;
+        }
+
+        .delete-button:hover::before {
+            font-size: 13px;
+            opacity: 1;
+            transform: translateY(35px);
+            transition-duration: 0.3s;
+        }
+
+        .panel-resize-handle {
+            position: absolute;
+            top: -5px;
+            left: 0;
+            right: 0;
+            height: 10px;
+            cursor: ns-resize;
+            background: transparent;
+            z-index: 1001;
+        }
+
+        .panel-drag-indicator {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background: #ddd;
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        #status-tips {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 999;
+            font-size: 14px;
+        }
+
+        /* --- Transition Logic --- */
+        .view-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* State: Chat View Active */
+        body[data-view="chat"] #chat-view {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 10;
+        }
+        body[data-view="chat"] #map-view {
+            transform: translateX(100%);
+            opacity: 0;
+            z-index: 0;
+            pointer-events: none; /* Prevent interaction when hidden */
+        }
+
+        /* State: Map View Active */
+        body[data-view="map"] #chat-view {
+            transform: translateX(-100%);
+            opacity: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body[data-view="map"] #map-view {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 10;
+        }
+
+    </style>
+</head>
+<body data-view="chat">
+
+    <!-- ==================== VIEW 1: CHAT INTERFACE ==================== -->
+    <div id="chat-view" class="view-section">
+        <header style="display: flex; align-items: center; justify-content: center; padding: 15px 20px; background-color: #fff; border-bottom: 1px solid #eee; position: relative;">
+            <h1 class="title" style="font-size: 18px; font-weight: bold; color: #e7a500;">小刻</h1>
+            
+            <!-- SWITCH CONTROL --> 
+            <div class="checkbox-wrapper-41">
+                <input type="checkbox" id="view-switch" />
+            </div>
+        </header>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message-container">
+                <div class="avatar-container">
+                    <img src="打招呼.gif" alt="AI Avatar" class="avatar">
+                </div>
+                <div class="message ai-message">
+                    我是刻俄柏，要是觉得拗口可以叫我小刻，如果有什么我能帮得上的，尽管叫我好啦。
+                    <div class="timestamp" style="font-size: 12px; color: #999; margin-top: 5px; text-align: right;">刚刚</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator" style="display: none; align-self: flex-start; background-color: #f0f0f0; padding: 12px 16px; border-radius: 18px; border-bottom-left-radius: 5px; margin-left: 66px; margin-bottom: 10px;">
+            <div class="typing-dots-container" style="display: flex; align-items: center; gap: 5px;">
+                <div class="typing-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #999; animation: typing 1.4s infinite ease-in-out;"></div>
+                <div class="typing-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #999; animation: typing 1.4s infinite ease-in-out; animation-delay: 0.2s;"></div>
+                <div class="typing-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #999; animation: typing 1.4s infinite ease-in-out; animation-delay: 0.4s;"></div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <input type="text" class="input-field" id="messageInput" placeholder="...">
+            <button class="button-custom" id="sendButton">
+                <div class="button-outer">
+                    <div class="button-inner">
+                        <span>🐾</span>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- ==================== VIEW 2: MAP INTERFACE ==================== -->
+    <div id="map-view" class="view-section">
+        <header style="display: flex; align-items: center; justify-content: center; padding: 15px 20px; background-color: #fff; border-bottom: 1px solid #eee; position: relative;">
+            <h1 class="title" style="font-size: 18px; font-weight: bold; color: #e7a500;">小刻的地图</h1>
+            
+            <!-- SWITCH CONTROL FOR MAP VIEW -->
+            <div class="checkbox-wrapper-41">
+                <input type="checkbox" id="view-switch-map" checked />
+            </div>
+        </header>
+        
+        <div id="container"></div>
+
+        <!-- Search Box -->
+        <div class="search-container-map">
+            <input type="text" class="search-input-map" id="search-input" placeholder="搜索地点..." />
+            <button class="search-btn-map" id="search-btn">搜索</button>
+        </div>
+
+        <!-- Log Panel -->
+        <div id="log-panel" class="log-panel">
+            <div class="panel-resize-handle" id="resize-handle"></div>
+            <div class="panel-drag-indicator"></div>
+            <div class="panel-header">
+                <h2>Attraction Logs</h2>
+            </div>
+            <div class="logs-list" id="logs-list"></div>
+            <div class="buttons-container">
+                <button class="new-log-btn" id="new-log-btn">+ New Log</button>
+                <button class="delete-button" id="delete-marker-btn" title="删除">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 39 7" class="svgIcon bin-top">
+                        <line stroke-width="4" stroke="white" y2="5" x2="39" y1="5"></line>
+                        <line stroke-width="3" stroke="white" y2="1.5" x2="26.0357" y1="1.5" x1="12"></line>
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 33 39" class="svgIcon bin-bottom">
+                        <mask fill="white" id="path-1-inside-1_8_19">
+                            <path d="M0 0H33V35C33 37.2091 31.2091 39 29 39H4C1.79086 39 0 37.2091 0 35V0Z"></path>
+                        </mask>
+                        <path mask="url(#path-1-inside-1_8_19)" fill="white" d="M0 0H33H0ZM37 35C37 39.4183 33.4183 43 29 43H4C-0.418278 43 -4 39.4183 -4 35H4H29H37ZM4 43C-0.418278 43 -4 39.4183 -4 35V0H4V35V43ZM37 0V35C37 39.4183 33.4183 43 29 43V35V0H37Z"></path>
+                        <path stroke-width="4" stroke="white" d="M12 6L12 29"></path>
+                        <path stroke-width="4" stroke="white" d="M21 6V29"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // GLOBAL STATE & UTILS
+        // ==========================================
+        const switchEl = document.getElementById('view-switch');
+        const switchElMap = document.getElementById('view-switch-map');
+        
+        function setView(viewName) {
+            document.body.setAttribute('data-view', viewName);
+            switchEl.checked = (viewName === 'map');
+            switchElMap.checked = (viewName === 'map');
+            
+            // If switching to map, trigger resize for AMap
+            if (viewName === 'map' && window.mapInstance) {
+                setTimeout(() => {
+                    window.mapInstance.resize();
+                }, 550); // Wait for transition
+            }
+        }
+
+        // Event Listeners for Switching with delay after animation completes
+        switchEl.addEventListener('change', (e) => {
+            // Wait for animation to complete before switching views
+            setTimeout(() => {
+                if(e.target.checked) {
+                    setView('map');
+                } else {
+                    setView('chat');
+                }
+            }, 500); // Match the transition duration
+        });
+
+        switchElMap.addEventListener('change', (e) => {
+            // Wait for animation to complete before switching views
+            setTimeout(() => {
+                if(!e.target.checked) {
+                    setView('chat');
+                } else {
+                    setView('map');
+                }
+            }, 500); // Match the transition duration
+        });
+
+        // ==========================================
+        // CHAT LOGIC (Preserved & Integrated)
+        // ==========================================
+        const chatContainer = document.getElementById('chatContainer');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        function addMessage(content, isUser = false) {
+            // Remove typing indicator if present
+            if(document.getElementById('typingIndicator').style.display !== 'none') {
+                 document.getElementById('typingIndicator').style.display = 'none';
+            }
+        function getRandomImage(){
+            const randomIndex = Math.floor(Math.random()*imageList.length);
+            return imageList[randomIndex]
+        }
+        const imageList =['打招呼.gif','打招呼2.gif','猥琐.gif','摇摆.gif'
+        ]
+            const messageContainer = document.createElement('div');
+            messageContainer.classList.add('message-container');
+            
+            if (!isUser) {
+                const avatarContainer = document.createElement('div');
+                avatarContainer.classList.add('avatar-container');
+                const avatarImg = document.createElement('img');
+                const randomFile = getRandomImage();
+                avatarImg.src = randomFile;
+                avatarImg.alt = 'AI Avatar';
+                avatarImg.classList.add('avatar');
+                avatarContainer.appendChild(avatarImg);
+                messageContainer.appendChild(avatarContainer);
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            messageDiv.classList.add(isUser ? 'user-message' : 'ai-message');
+            messageDiv.textContent = content;
+
+            if (!isUser) {
+                const now = new Date();
+                const timeString = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
+                const timestampDiv = document.createElement('div');
+                timestampDiv.classList.add('timestamp');
+                timestampDiv.textContent = timeString;
+                messageDiv.appendChild(timestampDiv);
+            }
+
+            messageContainer.appendChild(messageDiv);
+            
+            if (isUser) {
+                const userMessageWrapper = document.createElement('div');
+                userMessageWrapper.style.display = 'flex';
+                userMessageWrapper.style.justifyContent = 'flex-end';
+                userMessageWrapper.style.width = '100%';
+                userMessageWrapper.appendChild(messageContainer);
+                chatContainer.appendChild(userMessageWrapper);
+            } else {
+                chatContainer.appendChild(messageContainer);
+            }
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            messageInput.value = '';
+
+            // Show typing
+            const typingEl = document.getElementById('typingIndicator');
+            chatContainer.appendChild(typingEl); // Move to end
+            typingEl.style.display = 'block';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+ try {
+                const response = await fetch('http://localhost:8000/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                displayChatMessage(data.reply);
+                if (data.markers) {
+            await handleTravelPlanMarkers(data.markers);
+            updateTips("行程规划已完成，已为您标注在地图上！", false);
+        } else {
+            updateTips("", false);
+        }
+            typingIndicator.style.display = 'none';
+            
+            } catch (error) {
+                console.error('Error:', error);
+                typingIndicator.style.display = 'none';
+                addMessage('呜呜...小刻暂时联系不上大脑了，请你刷新试试');
+            }
+        }
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+
+        // ==========================================
+        // MAP LOGIC (Preserved & Integrated)
+        // ==========================================
+        window.logDataStore = {};
+        window.currentMarkerId = null;
+        window.markersMap = {};
+        window.mapInstance = null;
+        window.placeSearch = null;
+        const AMAP_KEY = "b53e654a8fdaee2ac5baa817874da746";
+
+        function updateTips(html, isError = false) {
+            const el = document.getElementById('status-tips');
+            if (el) {
+                el.innerHTML = html;
+                el.style.color = isError ? '#d32f2f' : '#333';
+                el.style.background = isError ? 'rgba(255, 200, 200, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+            }
+        }
+
+        function showLogPanel(markerId) {
+            window.currentMarkerId = markerId;
+            const panel = document.getElementById('log-panel');
+            panel.classList.add('show');
+            if (!logDataStore[markerId]) logDataStore[markerId] = { logs: [] };
+            renderLogsList(logDataStore[markerId].logs);
+        }
+
+        function renderLogsList(logs) {
+            const container = document.getElementById('logs-list');
+            if (!container) return;
+            container.innerHTML = '';
+            logs.forEach((log, index) => {
+                const div = document.createElement('div');
+                div.className = 'log-item';
+                div.innerHTML = `
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="checkbox-${index}" ${log.checked ? 'checked' : ''}>
+                        <label for="checkbox-${index}" class="terms-label">
+                            <svg viewBox="0 0 100 100" class="checkbox-svg">
+                                <rect x="5" y="5" width="90" height="90" rx="10" ry="10" class="checkbox-box"></rect>
+                                <path d="M25 50 L45 70 L75 30" fill="none" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="checkbox-tick"></path>
+                            </svg>
+                        </label>
+                    </div>
+                    <div class="log-content">
+                        <input type="text" class="log-title-input" placeholder="Log title" value="${log.title || ''}">
+                        <input type="text" class="log-desc-input" placeholder="添加备注" value="${log.desc || ''}">
+                    </div>
+                `;
+                
+                // Bind events manually to avoid innerHTML string complexity for listeners
+                const cb = div.querySelector('input[type="checkbox"]');
+                cb.onchange = (e) => { if(logDataStore[currentMarkerId]) logDataStore[currentMarkerId].logs[index].checked = e.target.checked; };
+                
+                const titleIn = div.querySelector('.log-title-input');
+                titleIn.oninput = (e) => { if(logDataStore[currentMarkerId]) logDataStore[currentMarkerId].logs[index].title = e.target.value; };
+                
+                const descIn = div.querySelector('.log-desc-input');
+                descIn.oninput = (e) => { if(logDataStore[currentMarkerId]) logDataStore[currentMarkerId].logs[index].desc = e.target.value; };
+
+                container.appendChild(div);
+            });
+        }
+
+        function makePanelResizable() {
+            const panel = document.getElementById('log-panel');
+            const handle = document.getElementById('resize-handle');
+            let isResizing = false;
+            let startY, startHeight;
+
+            handle.addEventListener('mousedown', startResize);
+            handle.addEventListener('touchstart', startResize, { passive: false });
+
+            function startResize(e) {
+                isResizing = true;
+                e.preventDefault();
+                const clientY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
+                startY = clientY;
+                startHeight = parseInt(document.defaultView.getComputedStyle(panel).height, 10);
+                document.addEventListener('mousemove', resize);
+                document.addEventListener('touchmove', resize, { passive: false });
+                document.addEventListener('mouseup', stopResize);
+                document.addEventListener('touchend', stopResize);
+            }
+
+            function resize(e) {
+                if (!isResizing) return;
+                e.preventDefault();
+                const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
+                const dy = clientY - startY;
+                let newHeight = startHeight - dy;
+                const minHeight = 100;
+                const maxHeight = window.innerHeight - 100;
+                newHeight = Math.max(minHeight, Math.min(newHeight, maxHeight));
+                panel.style.height = newHeight + 'px';
+            }
+
+            function stopResize(e) {
+                isResizing = false;
+                document.removeEventListener('mousemove', resize);
+                document.removeEventListener('touchmove', resize);
+                document.removeEventListener('mouseup', stopResize);
+                document.removeEventListener('touchend', stopResize);
+                const clientY = e.type === 'mouseup' ? e.clientY : (e.changedTouches ? e.changedTouches[0].clientY : null);
+                if (clientY !== null && clientY > window.innerHeight - 50) {
+                    panel.classList.remove('show');
+                    window.currentMarkerId = null;
+                }
+            }
+        }
+
+        function addNewLog() {
+            if (currentMarkerId !== null) {
+                logDataStore[currentMarkerId].logs.push({ title: '', desc: '', checked: false });
+                renderLogsList(logDataStore[currentMarkerId].logs);
+            }
+        }
+
+        window.removeMarkerById = function(id) {
+            if (markersMap[id] && window.mapInstance) {
+                window.mapInstance.remove(markersMap[id]);
+                delete markersMap[id];
+                delete logDataStore[id];
+                if (currentMarkerId === id) {
+                    document.getElementById('log-panel').classList.remove('show');
+                    currentMarkerId = null;
+                }
+            }
+        };
+
+        function confirmDeleteCurrentMarker() {
+            if (window.currentMarkerId === null) return;
+            if (confirm("确定要删除吗？")) {
+                removeMarkerById(window.currentMarkerId);
+                document.getElementById('log-panel').classList.remove('show');
+                window.currentMarkerId = null;
+            }
+        }
+
+        // Initialize Map
+        AMapLoader.load({
+            key: AMAP_KEY,
+            version: "2.0",
+            plugins: ['AMap.PlaceSearch']
+        }).then((AMap) => {
+            const map = new AMap.Map("container", {
+                viewMode: '2D',
+                zoom: 11,
+                center: [116.397428, 39.90923],
+                mapStyle: 'amap://styles/fresh'
+            });
+            window.mapInstance = map;
+
+            window.placeSearch = new AMap.PlaceSearch({
+                pageSize: 1, pageIndex: 1, city: "全国", extensions: 'all', map: map
+            });
+
+            AMap.plugin(['AMap.ToolBar', 'AMap.Scale'], function() {
+                map.addControl(new AMap.ToolBar());
+                map.addControl(new AMap.Scale());
+            });
+
+            document.getElementById('search-btn').onclick = function() {
+                const input = document.getElementById('search-input');
+                const btn = document.getElementById('search-btn');
+                const keywords = input.value.trim();
+                if (!keywords) { updateTips("请输入搜索关键词", true); return; }
+                btn.disabled = true; btn.textContent = "搜索中...";
+                window.placeSearch.search(keywords, function(status, result) {
+                    if (status === 'complete' && result.poiList && result.poiList.pois.length > 0) {
+                        const firstPoi = result.poiList.pois[0];
+                        window.mapInstance.setCenter(firstPoi.location);
+                        window.mapInstance.setZoom(15);
+                    
+                    } else {
+                        updateTips("未找到相关地点", true);
+                    }
+                    btn.disabled = false; btn.textContent = "搜索";
+                });
+            };
+
+            document.getElementById('search-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') document.getElementById('search-btn').click();
+            });
+
+            document.getElementById('new-log-btn').onclick = addNewLog;
+            document.getElementById('delete-marker-btn').onclick = confirmDeleteCurrentMarker;
+
+            function getMarkerContent(markerId) {
+                return `
+                  <div class="custom-content-marker" id="marker-${markerId}" style="width: 41.6px; height: 52px;">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:100%; filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));">
+        <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="#D32F2F"/>
+        <circle cx="12" cy="9" r="3.5" fill="white"/>
+        <path d="M12 19C9.5 19 7.5 17.5 7.5 16H16.5C16.5 17.5 14.5 19 12 19Z" fill="#D32F2F" opacity="0.8"/>
+    </svg>
+</div>
+                `;
+            }
+
+            function addNewMarker(lnglat) {
+                const newId = 'm-' + Date.now();
+                const newMarker = new AMap.Marker({
+                    position: lnglat,
+                    content: getMarkerContent(newId),
+                    offset: new AMap.Pixel(-16, -40),
+                    draggable: false,
+                });
+                newMarker.on('click', () => showLogPanel(newId));
+                window.mapInstance.add(newMarker);
+                markersMap[newId] = newMarker;
+                if (!logDataStore[newId]) logDataStore[newId] = { logs: [] };
+                return newId;
+            }
+
+async function handleTravelPlanMarkers(markers) {
+    if (!markers || markers.length === 0) return;
+ 
+    for (const item of markers) {
+        // 使用高德地图 POI 搜索将地点名称转换为坐标
+        await new Promise((resolve) => {
+            window.placeSearch.search(item.location, (status, result) => {
+                if (status === 'complete' && result.poiList && result.poiList.pois.length > 0) {
+                    const poi = result.poiList.pois[0];
+                    // 创建标记
+                    const markerId = addNewMarker(poi.location);
+                    
+                    // 向该标记添加日志
+                    if (logDataStore[markerId]) {
+                        logDataStore[markerId].logs.push({
+                            title: item.title || item.location,
+                            desc: item.desc || '',
+                            checked: false
+                        });
+                    }
+                } else {
+                    console.warn(`地点未找到: ${item.location}`);
+                }
+                resolve();
+            });
+        });
+    }
+}
+            // Initial Marker
+            const initialId = 'init-' + Date.now();
+            const initialMarker = new AMap.Marker({
+                position: [116.397428, 39.90923],
+                content: getMarkerContent(initialId),
+                offset: new AMap.Pixel(-16, -40),
+            });
+            initialMarker.on('click', () => showLogPanel(initialId));
+            map.add(initialMarker);
+            markersMap[initialId] = initialMarker;
+
+            let longPressTimer = null;
+            map.on('mousedown', function(e) {
+                longPressTimer = setTimeout(() => {
+                    addNewMarker(e.lnglat);
+                    updateTips("", false);
+                }, 500);
+            });
+            map.on('mouseup', () => { if (longPressTimer) clearTimeout(longPressTimer); longPressTimer = null; });
+            map.on('mouseleave', () => { if (longPressTimer) clearTimeout(longPressTimer); longPressTimer = null; });
+
+            setTimeout(makePanelResizable, 500);
+        }).catch((e) => {
+            console.error(e);
+            updateTips("❌ 地图加载失败", true);
+        });
+
+    </script>
+</body>
+</html>
+```

@@ -1,0 +1,10 @@
+langchain
+langchain_core
+langchain_community
+langchain-openai
+dotenv
+zhipuai
+fastapi==0.108.0
+redis
+qdrant_client==1.7.1
+uvicorn==0.23.2
