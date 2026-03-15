@@ -4,7 +4,7 @@ services:
   # 1. 后端 Python 服务
   backend:
     build: .
-    container_name: kebrain_backend
+    container_name: backend
     environment:
       - REDIS_URL=redis://redis:6379/0
       - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY}  
@@ -21,15 +21,13 @@ services:
   redis:
     image: redis:latest
     container_name: kebrain_redis
-    ports:
-      - "6379:6379" # 可选：方便宿主机查看数据
     networks:
       - app-network
 
   # 3. 前端 Nginx 服务
   frontend:
     image: nginx:latest
-    container_name: kebrain_frontend
+    container_name: frontend
     ports:
       - "80:80"
     volumes:
